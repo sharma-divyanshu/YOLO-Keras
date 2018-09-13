@@ -191,12 +191,18 @@ class YOLO(object):
     def close_session(self):
         self.sess.close()
 
-def detect_video(yolo, video_path, output_path="", file_path=""):
+def detect_video(yolo, video_path, output_path, file_path):
     import cv2
-    vid = cv2.VideoCapture(video_path)
+    print(video_path)
+    print(output_path)
+    if video_path == './path2your_video':
+        vid = cv2.VideoCapture(0)
+    else:
+        vid = cv2.VideoCapture(video_path)        
     if not vid.isOpened():
         raise IOError("Couldn't open webcam or video")
-    video_FourCC    = int(vid.get(cv2.CAP_PROP_FOURCC))
+    # video_FourCC    = int(vid.get(cv2.CAP_PROP_FOURCC))
+    video_FourCC    = cv2.VideoWriter_fourcc(*'MJPG')
     video_fps       = vid.get(cv2.CAP_PROP_FPS)
     video_size      = (int(vid.get(cv2.CAP_PROP_FRAME_WIDTH)),
                         int(vid.get(cv2.CAP_PROP_FRAME_HEIGHT)))
