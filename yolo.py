@@ -106,6 +106,36 @@ class YOLO(object):
     def write_file(self, key, value, file_path):
         with open(file_path, "a") as f:
             f.writelines('"'+str(key)+'":"'+str(value)+'"')
+
+    # K NEAREST NEIGHBOURS HISTOGRAM
+
+    def find_histogram(clt):
+        """
+        create a histogram with k clusters
+        :param: clt
+        :return:hist
+        """
+        numLabels = np.arange(0, len(np.unique(clt.labels_)) + 1)
+        (hist, _) = np.histogram(clt.labels_, bins=numLabels)
+
+        hist = hist.astype("float")
+        hist /= hist.sum()
+
+        return hist
+
+    def plot_colors2(hist, centroids):
+        bar = np.zeros((50, 300, 3), dtype="uint8")
+        startX = 0
+
+        for (percent, color) in zip(hist, centroids):
+            # plot the relative percentage of each cluster
+            endX = startX + (percent * 300)
+            cv2.rectangle(bar, (int(startX), 0), (int(endX), 50),
+                        color.astype("uint8").tolist(), -1)
+            startX = endX
+
+        # return the bar chart
+        return bar
     
     def detect_image(self, image, file_path):
         start = timer()
@@ -156,17 +186,55 @@ class YOLO(object):
             box = out_boxes[i]
             score = out_scores[i]
 
-            label = '{} {:.2f}'.format(predicted_class, score)
-            draw = ImageDraw.Draw(image)
-            label_size = draw.textsize(label, font)
-
             top, left, bottom, right = box
             top = max(0, np.floor(top + 0.5).astype('int32'))
             left = max(0, np.floor(left + 0.5).astype('int32'))
             bottom = min(image.size[1], np.floor(bottom + 0.5).astype('int32'))
             right = min(image.size[0], np.floor(right + 0.5).astype('int32'))
+
+            from PIL import Image
+            import matplotlib.pyplot as plt
+
+            if predicted_class == 'car':
+                crop_img = image.crop((left,top,right,bottom))
+                crop_img.show()
+                w, h = crop_img.size
+                pixels = crop_img.getcolors(w * h)
+                most_frequent_pixel = pixels[0]
+                for count, colour in pixels:
+                    if colour != (255,0,248):
+                        if count > most_frequent_pixel[0]:
+                            most_frequent_pixel = (count, colour)
                         
-            print(label, (left, top), (right, bottom))
+                plt.imshow([[most_frequent_pixel[1]]])
+                plt.show()
+                print("Most Common", crop_img, most_frequent_pixel[1])
+
+                import cv2
+                import numpy as np
+                import matplotlib.pyplot as plt
+                from sklearn.cluster import KMeans
+
+                img = np.asarray(crop_img)
+                img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+
+                img = img.reshape((img.shape[0] * img.shape[1],3)) #represent as row*column,channel number
+                clt = KMeans(n_clusters=3) #cluster number
+                clt.fit(img)
+
+                hist = find_histogram(clt)
+                bar = plot_colors2(hist, clt.cluster_centers_)
+
+                plt.axis("off")
+                plt.imshow(bar)
+                # plt.savefig('foo.png', bbox_inches='tight')
+                plt.show()
+
+            label = '{} {:.2f}'.format(predicted_class, score)
+            draw = ImageDraw.Draw(image)
+            label_size = draw.textsize(label, font)
+
+            print(label, (left, top), (right, bottom)) # Bounding box out
 
             if top - label_size[1] >= 0:
                 text_origin = np.array([left, top - label_size[1]])
@@ -201,9 +269,14 @@ def detect_video(yolo, video_path, output_path, file_path):
         vid = cv2.VideoCapture(video_path)        
     if not vid.isOpened():
         raise IOError("Couldn't open webcam or video")
-    # video_FourCC    = int(vid.get(cv2.CAP_PROP_FOURCC))
+    
     video_FourCC    = cv2.VideoWriter_fourcc(*'MJPG')
-    video_fps       = vid.get(cv2.CAP_PROP_FPS)
+    
+    if video_path == './path2your_video':
+        video_fps = 60
+    else:
+        video_fps = vid.get(cv2.CAP_PROP_FPS)
+
     video_size      = (int(vid.get(cv2.CAP_PROP_FRAME_WIDTH)),
                         int(vid.get(cv2.CAP_PROP_FRAME_HEIGHT)))
     isOutput = True if output_path != "" else False
@@ -241,4 +314,3 @@ def detect_video(yolo, video_path, output_path, file_path):
     with open(file_path, "a+") as f:
         f.write(']')
     yolo.close_session()
-

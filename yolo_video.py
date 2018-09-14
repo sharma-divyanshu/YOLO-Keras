@@ -12,7 +12,7 @@ def detect_img(yolo):
             print('Open Error! Try again!')
             continue
         else:
-            r_image = yolo.detect_image(image)
+            r_image = yolo.detect_image(image, 'output/lol.txt')
             r_image.show()
     yolo.close_session()
 
@@ -76,6 +76,7 @@ if __name__ == '__main__':
         if "input" in FLAGS:
             print(" Ignoring remaining command line arguments: " + FLAGS.input + "," + FLAGS.output)
         detect_img(YOLO(**vars(FLAGS)))
+
     elif "input" in FLAGS:
         detect_video(YOLO(**vars(FLAGS)), FLAGS.input, FLAGS.output, FLAGS.file_path)
     else:
