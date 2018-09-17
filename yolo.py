@@ -9,6 +9,11 @@ from timeit import default_timer as timer
 
 import collections
 
+import cv2
+import matplotlib.pyplot as plt
+from sklearn.cluster import KMeans
+from PIL import Image
+
 import numpy as np
 from keras import backend as K
 from keras.models import load_model
@@ -136,6 +141,55 @@ class YOLO(object):
 
         # return the bar chart
         return bar
+
+    def get_pixel(image, i, j):
+        # Inside image bounds?
+        width, height = image.size
+        if i > width or j > height:
+            return None
+
+        # Get Pixel
+        pixel = image.getpixel((i, j))
+        return pixel
+    
+    def convert_primary(image):
+        # Get size
+        width, height = image.size
+
+        # Create new Image and a Pixel Map
+        new = Image.new("RGB", (width, height), "white")
+        pixels = new.load()
+
+        # Transform to primary
+        for i in range(width):
+            for j in range(height):
+                # Get Pixel
+                pixel = YOLO.get_pixel(image, i, j)
+
+                # Get R, G, B values (This are int from 0 to 255)
+                red =   pixel[0]
+                green = pixel[1]
+                blue =  pixel[2]
+
+                # Transform to primary
+                if red > 127:
+                    red = 255
+                else:
+                    red = 0
+                if green > 127:
+                    green = 255
+                else:
+                    green = 0
+                if blue > 127:
+                    blue = 255
+                else:
+                    blue = 0
+
+                # Set Pixel in new image
+                pixels[i, j] = (int(red), int(green), int(blue))
+
+            # Return new image
+        return new
     
     def detect_image(self, image, file_path):
         start = timer()
@@ -191,44 +245,51 @@ class YOLO(object):
             left = max(0, np.floor(left + 0.5).astype('int32'))
             bottom = min(image.size[1], np.floor(bottom + 0.5).astype('int32'))
             right = min(image.size[0], np.floor(right + 0.5).astype('int32'))
-
-            from PIL import Image
-            import matplotlib.pyplot as plt
-
-            if predicted_class == 'car':
-                crop_img = image.crop((left,top,right,bottom))
-                crop_img.show()
+            car_color = ''
+            if predicted_class == 'car' and score > 0.50:
+                crop_img = image.crop((int(left),int(top),int(right),int(bottom)))
                 w, h = crop_img.size
-                pixels = crop_img.getcolors(w * h)
-                most_frequent_pixel = pixels[0]
+                primary_image = YOLO.convert_primary(crop_img)
+                pixels = primary_image.getcolors(w * h)
+                most_frequent_pixel = (0, (14, 0, 0))
                 for count, colour in pixels:
-                    if colour != (255,0,248):
+                    if colour != (255, 0, 255) and colour != (255, 255, 255) and colour != (0, 0, 0):
                         if count > most_frequent_pixel[0]:
                             most_frequent_pixel = (count, colour)
-                        
-                plt.imshow([[most_frequent_pixel[1]]])
-                plt.show()
-                print("Most Common", crop_img, most_frequent_pixel[1])
+                
+                if most_frequent_pixel[1] == (0, 0, 255):
+                    car_color = 'red'
+                elif most_frequent_pixel[1] == (0, 255, 0):
+                    car_color = 'green'
+                elif most_frequent_pixel[1] == (255, 0, 0):
+                    car_color = 'blue'
+                elif most_frequent_pixel[1] == (255, 255, 0):
+                    car_color = 'yellow'
+                elif most_frequent_pixel[1] == (0, 255, 255):
+                    car_color = 'light blue'
+                elif most_frequent_pixel[1] == (255, 0, 255):
+                    car_color = 'pink'                
+                # crop_img.show()
+                # primary_image.show()
+                # plt.imshow([[most_frequent_pixel[1]]])
+                # plt.show()
+                
+                # print("Most Common", most_frequent_pixel[1])
 
-                import cv2
-                import numpy as np
-                import matplotlib.pyplot as plt
-                from sklearn.cluster import KMeans
+                # img = np.asarray(crop_img)
+                # # img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 
-                img = np.asarray(crop_img)
-                img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+                # img = img.reshape((img.shape[0] * img.shape[1],3)) #represent as row*column,channel number
+                # clt = KMeans(n_clusters=3) #cluster number
+                # clt.fit(img)
 
-                img = img.reshape((img.shape[0] * img.shape[1],3)) #represent as row*column,channel number
-                clt = KMeans(n_clusters=3) #cluster number
-                clt.fit(img)
+                # hist = YOLO.find_histogram(clt)
+                # bar = YOLO.plot_colors2(hist, clt.cluster_centers_)
 
-                hist = find_histogram(clt)
-                bar = plot_colors2(hist, clt.cluster_centers_)
-
-                plt.axis("off")
-                plt.imshow(bar)
-                # plt.savefig('foo.png', bbox_inches='tight')
-                plt.show()
+                # plt.axis("off")
+                # # plt.imshow(bar)
+                # # plt.savefig('foo.png', bbox_inches='tight')
+                # plt.show()
 
             label = '{} {:.2f}'.format(predicted_class, score)
             draw = ImageDraw.Draw(image)
@@ -249,7 +310,10 @@ class YOLO(object):
             draw.rectangle(
                 [tuple(text_origin), tuple(text_origin + label_size)],
                 fill=self.colors[c])
-            draw.text(text_origin, label, fill=(0, 0, 0), font=font)
+            if predicted_class == 'car':
+                draw.text(text_origin, car_color + ' car', fill=(0, 0, 0), font=font)
+            else:
+                draw.text(text_origin, label, fill=(0, 0, 0), font=font)
             del draw
 
         end = timer()
@@ -291,6 +355,8 @@ def detect_video(yolo, video_path, output_path, file_path):
         f.write('"'+video_path+'":[\n')
     while True:
         return_value, frame = vid.read()
+        if not return_value:
+            break
         image = Image.fromarray(frame)
         image = yolo.detect_image(image, file_path)
         result = np.asarray(image)
