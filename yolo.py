@@ -3,11 +3,15 @@
 Class definition of YOLO_v3 style detection model on image and video
 """
 
+#!/usr/bin/python
+
 import colorsys
 import os
 from timeit import default_timer as timer
 
 import collections
+
+from subprocess import call
 
 import cv2
 import matplotlib.pyplot as plt
@@ -26,12 +30,12 @@ from keras.utils import multi_gpu_model
 
 class YOLO(object):
     _defaults = {
-        "model_path": 'model_data/yolo.h5',
-        "anchors_path": 'model_data/yolo_anchors.txt',
-        "classes_path": 'model_data/coco_classes.txt',
+        "model_path": '/home/divyanshu/Desktop/YOLO/model_data/yolo.h5',
+        "anchors_path": '/home/divyanshu/Desktop/YOLO/model_data/yolo_anchors.txt',
+        "classes_path": '/home/divyanshu/Desktop/YOLO/model_data/coco_classes.txt',
         "score" : 0.3,
         "iou" : 0.45,
-        "file_path" : 'output/objectList.txt',
+        "file_path" : '/home/divyanshu/Desktop/YOLO/output/objectList.txt',
         "model_image_size" : (416, 416),
         "gpu_num" : 1,
     }
@@ -218,7 +222,7 @@ class YOLO(object):
                     
         print('\nFound {} boxes for {}\n'.format(len(out_boxes), 'img'))
 
-        font = ImageFont.truetype(font='font/FiraMono-Medium.otf',
+        font = ImageFont.truetype(font='/home/divyanshu/Desktop/YOLO/font/FiraMono-Medium.otf',
                     size=np.floor(3e-2 * image.size[1] + 0.5).astype('int32'))
         thickness = (image.size[0] + image.size[1]) // 300
         
@@ -268,7 +272,7 @@ class YOLO(object):
                 elif most_frequent_pixel[1] == (0, 255, 255):
                     car_color = 'light blue'
                 elif most_frequent_pixel[1] == (255, 0, 255):
-                    car_color = 'pink'                
+                    car_color = 'pink'          
                 # crop_img.show()
                 # primary_image.show()
                 # plt.imshow([[most_frequent_pixel[1]]])
@@ -349,6 +353,7 @@ def detect_video(yolo, video_path, output_path, file_path):
         out = cv2.VideoWriter(output_path, video_FourCC, video_fps, video_size)
     accum_time = 0
     curr_fps = 0
+    count = 1
     fps = "FPS: ??"
     prev_time = timer()
     with open(file_path, "a+") as f:
@@ -357,26 +362,36 @@ def detect_video(yolo, video_path, output_path, file_path):
         return_value, frame = vid.read()
         if not return_value:
             break
-        image = Image.fromarray(frame)
-        image = yolo.detect_image(image, file_path)
-        result = np.asarray(image)
-        curr_time = timer()
-        exec_time = curr_time - prev_time
-        prev_time = curr_time
-        accum_time = accum_time + exec_time
-        curr_fps = curr_fps + 1
-        if accum_time > 1:
-            accum_time = accum_time - 1
-            fps = "FPS: " + str(curr_fps)
-            curr_fps = 0
-        cv2.putText(result, text=fps, org=(3, 15), fontFace=cv2.FONT_HERSHEY_SIMPLEX,
-                    fontScale=0.50, color=(255, 0, 0), thickness=2)
-        cv2.namedWindow("result", cv2.WINDOW_NORMAL)
-        cv2.imshow("result", result)
-        if isOutput:
-            out.write(result)
-        if cv2.waitKey(1) & 0xFF == ord('q'):
-            break
+        if count == 1:
+            count += 1
+            image = Image.fromarray(frame)
+            image = yolo.detect_image(image, file_path)
+            result = np.asarray(image)
+            curr_time = timer()
+            exec_time = curr_time - prev_time
+            prev_time = curr_time
+            accum_time = accum_time + exec_time
+            curr_fps = curr_fps + 1
+            if accum_time > 1:
+                accum_time = accum_time - 1
+                fps = "FPS: " + str(curr_fps)
+                curr_fps = 0
+            cv2.putText(result, text=fps, org=(3, 15), fontFace=cv2.FONT_HERSHEY_SIMPLEX,
+                        fontScale=0.50, color=(255, 0, 0), thickness=2)
+            cv2.namedWindow("result", cv2.WINDOW_NORMAL)
+            cv2.imshow("result", result)
+            if isOutput:
+                out.write(result)
+            if cv2.waitKey(1) & 0xFF == ord('q'):
+                break
+        elif count < 5:
+            image = Image.fromarray(frame)
+            count += 1
+        elif count == 5:
+            image = Image.fromarray(frame)
+            count = 1
     with open(file_path, "a+") as f:
         f.write(']')
     yolo.close_session()
+    # Note that you have to specify path to script
+    call(["node", "node_service/complete.js"]) 
