@@ -357,7 +357,7 @@ def detect_video(yolo, video_path, output_path, file_path):
     fps = "FPS: ??"
     prev_time = timer()
     with open(file_path, "a+") as f:
-        f.write('"'+video_path+'":[\n')
+        f.write('{"'+video_path+'":[\n')
     while True:
         return_value, frame = vid.read()
         if not return_value:
@@ -390,8 +390,11 @@ def detect_video(yolo, video_path, output_path, file_path):
         elif count == 5:
             image = Image.fromarray(frame)
             count = 1
+    with open(file_path, 'rb+') as filehandle:
+        filehandle.seek(-3, os.SEEK_END)
+        filehandle.truncate()
     with open(file_path, "a+") as f:
-        f.write(']')
+        f.write(']}')
     yolo.close_session()
     # Note that you have to specify path to script
     call(["node", "node_service/complete.js"]) 
