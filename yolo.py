@@ -331,7 +331,6 @@ class YOLO(object):
         self.sess.close()
 
 def detect_video(yolo, video_path, output_path, file_path):
-    import cv2
     print(video_path)
     print(output_path)
     if video_path == './path2your_video':
