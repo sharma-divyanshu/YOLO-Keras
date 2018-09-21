@@ -31,7 +31,7 @@ let yolo = function yoloFunc(filename) {
     var pyArgs = {
         "file_path": __dirname+'../output/'+inputfilename+'.json',
         "input": filename,
-        "output": __dirname+'../processed_files/PROCESSED_'+inputfilename+'.avi',
+        "output": __dirname+'../processed_files/PROCESSED_'+inputfilename+'.mp4',
       };
 
     filelocation = pyArgs.file_path;
