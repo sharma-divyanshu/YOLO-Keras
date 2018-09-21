@@ -405,5 +405,5 @@ def detect_video(yolo, video_path, output_path, file_path):
         f.write(']}')
     yolo.close_session()
     
-    call('ffmpeg -i '+output_path+' -vcodec libx264 /vigilandsrecordings/recordings/PROCESSED'+os.path.basename(output_path)+'.ts')
+    call('ffmpeg -i '+output_path+' -vcodec libx264 /vigilandsrecordings/recordings/PROCESSED-'+os.path.basename(output_path)+'.ts')
 
