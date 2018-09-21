@@ -28,14 +28,16 @@ from yolo3.model import yolo_eval, yolo_body, tiny_yolo_body
 from yolo3.utils import letterbox_image
 from keras.utils import multi_gpu_model
 
+dirname, filename = os.path.split(os.path.realpath(__file__))
+
 class YOLO(object):
     _defaults = {
-        "model_path": '/home/divyanshu/Desktop/YOLO/model_data/yolo.h5',
-        "anchors_path": '/home/divyanshu/Desktop/YOLO/model_data/yolo_anchors.txt',
-        "classes_path": '/home/divyanshu/Desktop/YOLO/model_data/coco_classes.txt',
+        "model_path": dirname+'/model_data/yolo.h5',
+        "anchors_path": dirname+'/model_data/yolo_anchors.txt',
+        "classes_path": dirname+'/model_data/coco_classes.txt',
         "score" : 0.3,
         "iou" : 0.45,
-        "file_path" : '/home/divyanshu/Desktop/YOLO/output/objectList.txt',
+        "file_path" : dirname+'/output/objectList.txt',
         "model_image_size" : (416, 416),
         "gpu_num" : 1,
     }
@@ -222,13 +224,14 @@ class YOLO(object):
                     
         print('\nFound {} boxes for {}\n'.format(len(out_boxes), 'img'))
 
-        font = ImageFont.truetype(font='/home/divyanshu/Desktop/YOLO/font/FiraMono-Medium.otf',
+        font = ImageFont.truetype(font=dirname+'/font/FiraMono-Medium.otf',
                     size=np.floor(3e-2 * image.size[1] + 0.5).astype('int32'))
         thickness = (image.size[0] + image.size[1]) // 300
         
         classArray = collections.Counter(list(out_classes))
         
         if list(classArray.keys()):
+
             with open(file_path, "a") as f:
                 f.write('{')
             self.write_file(self.class_names[list(classArray.keys())[0]], list(classArray.values())[0], file_path)
@@ -356,6 +359,11 @@ def detect_video(yolo, video_path, output_path, file_path):
     count = 1
     fps = "FPS: ??"
     prev_time = timer()
+    if os.path.exists(file_path):
+                try:
+                    os.remove(file_path)
+                except OSError as e:
+                    print("Some error occured while deletion")
     with open(file_path, "a+") as f:
         f.write('{"'+video_path+'":[\n')
     while True:
@@ -391,10 +399,8 @@ def detect_video(yolo, video_path, output_path, file_path):
             image = Image.fromarray(frame)
             count = 1
     with open(file_path, 'rb+') as filehandle:
-        filehandle.seek(-3, os.SEEK_END)
+        filehandle.seek(-2, os.SEEK_END)
         filehandle.truncate()
     with open(file_path, "a+") as f:
         f.write(']}')
     yolo.close_session()
-    # Note that you have to specify path to script
-    call(["node", "node_service/complete.js"]) 

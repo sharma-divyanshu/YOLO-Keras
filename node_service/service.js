@@ -1,60 +1,86 @@
 var exec = require('child_process').exec;
 var path = require('path');
-var express = require('express');
-
-var app = express();
-
-app.listen(3000, function() {
-    console.log("Running on port 3000")
-})
+const fs = require('fs');
 
 var filelocation;
+let unique = []
 var pyPath = '../';
 
-app.get('/yolo', yolo);
+let yolo = function yoloFunc(filename) {
 
-function yolo(req, res) { 
-
-    console.log("Request received");
     function flagGen(args) {
         var flags = '';
         for (var a in args) {
-          if (args.hasOwnProperty(a)) {
-            if (typeof(pyArgs[a]) == 'string'){
-              flags += " --" + a + ' ' + pyArgs[a];
+            if (args.hasOwnProperty(a)) {
+                if (typeof(pyArgs[a]) == 'string'){
+                    flags += " --" + a + ' ' + pyArgs[a];
+                }
+                else {
+                    if (pyArgs[a] == true)
+                        flags += ' --' + a;
+                }
             }
-            else {
-              if (pyArgs[a] == true)
-                flags += ' --' + a;
-            }
-          }
         }
         return flags;
-      }
+    }
+
+    let inputfile = path.basename(filename);
+    let extension = path.extname(inputfile);
+    let inputfilename = path.basename(inputfile, extension)
 
     var pyArgs = {
-        "file_path": '/home/divyanshu/Desktop/YOLO/output/'+req.query.filepath,
-        "input": '/home/divyanshu/Desktop/YOLO/'+req.query.input,
-        "output": '/home/divyanshu/Desktop/YOLO/'+req.query.output,
+        "file_path": __dirname+'../output/'+inputfilename+'.json',
+        "input": filename,
+        "output": __dirname+'../processed_files/PROCESSED_'+inputfilename+'.avi',
       };
 
     filelocation = pyArgs.file_path;
 
     var execstr = 'python3 ' + path.join(pyPath, 'yolo_video.py') + flagGen(pyArgs);
     var child = exec(execstr, function(error, stdout, stderr) {
-    if (error) {
-        console.log(stderr)
-    }
-    res.sendStatus(200);
-});
+        if (error) {
+            console.log(stderr)
+        }
+    });
+    
     child.stdout.on('data', function(data) { 
         console.log(data.toString());
     } );
+
+    child.stdout.on('end', function() {
+        
+        let objectDetail;
+        let rawData = fs.readFileSync(filelocation.toString());
+        if(rawData) {
+            try {
+                objectDetail = JSON.parse(rawData);
+            } catch(e) {
+                console.log("File not in JSON format")
+            }
+        }
+        let keys = Object.keys(objectDetail).toString();
+        let values = objectDetail[keys];
+        let all = []
+        for(let i=0; i<values.length; i++) {
+            
+            if (Object.keys(values[i]).length > 1) {
+                for (let j = 0; j < Object.keys(values[i]).length; j++) {
+                    all.push(Object.keys(values[i])[j]);
+                }
+            }
+            else {
+                all.push(Object.keys(values[i]).toString())
+            }
+        }
+
+        for(i = 0; i<all.length; i++) {
+            if (!unique.includes(all[i])) { unique.push(all[i])}
+        }
+        console.log(unique);
+        return unique, pyArgs.output;
+    })
 };
 
-app.get('/filepath', returnFilepath);
-
-function returnFilepath(req, res) {
-    // res.send('/home/divyanshu/Desktop/YOLO/output/texty.json')
-    res.send(filelocation.toString());
+module.exports = {
+    yolo
 }
