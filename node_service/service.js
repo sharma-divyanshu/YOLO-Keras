@@ -55,6 +55,6 @@ function yolo(req, res) {
 app.get('/filepath', returnFilepath);
 
 function returnFilepath(req, res) {
-    res.send('/home/divyanshu/Desktop/YOLO/output/texty.json')
-    // res.send(filelocation.toString());
+    // res.send('/home/divyanshu/Desktop/YOLO/output/texty.json')
+    res.send(filelocation.toString());
 }
