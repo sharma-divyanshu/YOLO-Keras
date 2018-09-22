@@ -6,7 +6,7 @@ var filelocation;
 let unique = []
 var pyPath = '../';
 
-let yolo = function yoloFunc(filename) {
+let yolo = (filename,callback) => {
 
     function flagGen(args) {
         var flags = '';
@@ -31,7 +31,7 @@ let yolo = function yoloFunc(filename) {
     var pyArgs = {
         "file_path": __dirname+'../output/'+inputfilename+'.json',
         "input": filename,
-        "output": __dirname+'../processed_files/PROCESSED_'+inputfilename+'.mp4',
+        "output": '/vigilandsrecordings/recordings/'+inputfilename+'.avi',
       };
 
     filelocation = pyArgs.file_path;
@@ -39,30 +39,30 @@ let yolo = function yoloFunc(filename) {
     var execstr = 'python3 ' + path.join(pyPath, 'yolo_video.py') + flagGen(pyArgs);
     var child = exec(execstr, function(error, stdout, stderr) {
         if (error) {
-            console.log(stderr)
+            return callback(stderr);
         }
     });
-    
-    child.stdout.on('data', function(data) { 
+
+    child.stdout.on('data', function(data) {
         console.log(data.toString());
     } );
 
     child.stdout.on('end', function() {
-        
+
         let objectDetail;
         let rawData = fs.readFileSync(filelocation.toString());
         if(rawData) {
             try {
                 objectDetail = JSON.parse(rawData);
             } catch(e) {
-                console.log("File not in JSON format")
+                return callback(new Error("parsing error"))
             }
         }
         let keys = Object.keys(objectDetail).toString();
         let values = objectDetail[keys];
         let all = []
         for(let i=0; i<values.length; i++) {
-            
+
             if (Object.keys(values[i]).length > 1) {
                 for (let j = 0; j < Object.keys(values[i]).length; j++) {
                     all.push(Object.keys(values[i])[j]);
@@ -77,7 +77,12 @@ let yolo = function yoloFunc(filename) {
             if (!unique.includes(all[i])) { unique.push(all[i])}
         }
         console.log(unique);
-        return unique, pyArgs.output;
+        // return unique, pyArgs.output;
+        var data={
+            list:unique,
+            outputPath:pyArgs.output
+        }
+        return callback(null,data)
     })
 };
 
