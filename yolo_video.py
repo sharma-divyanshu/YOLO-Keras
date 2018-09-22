@@ -2,6 +2,11 @@ import sys
 import argparse
 from yolo import YOLO, detect_video
 from PIL import Image
+import time
+from subprocess import call
+import os
+
+processed_directory = '/home/divyanshu/Desktop/YOLO/P_'
 
 def detect_img(yolo):
     while True:
@@ -78,6 +83,15 @@ if __name__ == '__main__':
         detect_img(YOLO(**vars(FLAGS)))
 
     elif "input" in FLAGS:
-        detect_video(YOLO(**vars(FLAGS)), FLAGS.input, FLAGS.output, FLAGS.file_path)
+        status = detect_video(YOLO(**vars(FLAGS)), FLAGS.input, FLAGS.output, FLAGS.file_path)
+        print(status)
+        exists = os.path.isfile(processed_directory+str(os.path.splitext(os.path.basename(FLAGS.output))[0])+'.ts')
+        if exists:
+            print("File already exists. Deleting.")
+            os.remove(processed_directory+str(os.path.splitext(os.path.basename(FLAGS.output))[0])+'.ts')
+        os.system('sudo ffmpeg -i '+str(FLAGS.output)+' -vcodec libx264 '+processed_directory+str(os.path.splitext(os.path.basename(FLAGS.output))[0])+'.ts')
+        print("File Converted")
+        os.system('sudo rm -f '+str(FLAGS.output))
+        print(FLAGS.output+' deleted')
     else:
         print("Must specify at least video_input_path.  See usage with --help.")

@@ -403,6 +403,4 @@ def detect_video(yolo, video_path, output_path, file_path):
     with open(file_path, "a+") as f:
         f.write(']}')
     yolo.close_session()
-    
-    call('ffmpeg -i '+output_path+' -vcodec libx264 /vigilandsrecordings/recordings/P_'+os.path.basename(output_path)+'.ts')
-
+    return "Detection Successful"
