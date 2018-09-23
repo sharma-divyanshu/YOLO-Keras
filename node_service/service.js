@@ -87,9 +87,8 @@ let yolo = (filename,callback) => {
     })
 };
 
-yolo('/home/ubuntu/YOLO-Keras/colourtag1.avi', function(err, data) {
-	console.log('=======', err, data);	
-});
+//yolo('/home/ubuntu/YOLO-Keras/videoplaybacklq.mp4', function(err, data) {
+//	console.log('aoisdfoijsdiofjaoisdc=======', err, data);});
 
 module.exports = {
     yolo
