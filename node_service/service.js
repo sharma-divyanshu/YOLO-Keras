@@ -4,7 +4,7 @@ const fs = require('fs');
 
 var filelocation;
 let unique = []
-var pyPath = '../';
+var pyPath = '/home/ubuntu/YOLO-Keras/';
 
 let yolo = (filename,callback) => {
 
@@ -29,17 +29,17 @@ let yolo = (filename,callback) => {
     let inputfilename = path.basename(inputfile, extension)
 
     var pyArgs = {
-        "file_path": __dirname+'../output/'+inputfilename+'.json',
+        "file_path": __dirname+'/output/'+inputfilename+'.json',
         "input": filename,
         "output": '/vigilandsrecordings/recordings/'+inputfilename+'.avi',
       };
 
     filelocation = pyArgs.file_path;
 
-    var execstr = 'python3 ' + path.join(pyPath, 'yolo_video.py') + flagGen(pyArgs);
+    var execstr = 'sudo python3 ' + path.join(pyPath, 'yolo_video.py') + flagGen(pyArgs);
     var child = exec(execstr, function(error, stdout, stderr) {
         if (error) {
-            return callback(stderr);
+            return stderr;
         }
     });
 
@@ -48,16 +48,16 @@ let yolo = (filename,callback) => {
     } );
 
     child.stdout.on('end', function() {
-
+	console.log("Processing ended");
         let objectDetail;
         let rawData = fs.readFileSync(filelocation.toString());
         if(rawData) {
             try {
                 objectDetail = JSON.parse(rawData);
             } catch(e) {
-                return callback(new Error("parsing error"))
+		console.log(e);
             }
-        }
+        };
         let keys = Object.keys(objectDetail).toString();
         let values = objectDetail[keys];
         let all = []
@@ -77,14 +77,18 @@ let yolo = (filename,callback) => {
             if (!unique.includes(all[i])) { unique.push(all[i])}
         }
         console.log(unique);
-        // return unique, pyArgs.output;
         var data={
             list:unique,
             outputPath:pyArgs.output
         }
-        return callback(null,data)
+	console.log('------------------------------------------',data)
+        callback(null,data)
     })
 };
+
+yolo('/home/ubuntu/YOLO-Keras/colourtag1.avi', function(err, data) {
+	console.log('aoisdfoijsdiofjaoisdc=======', err, data);	
+});
 
 module.exports = {
     yolo

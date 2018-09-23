@@ -266,16 +266,16 @@ class YOLO(object):
                 
                 if most_frequent_pixel[1] == (0, 0, 255):
                     car_color = 'red'
-                elif most_frequent_pixel[1] == (0, 255, 0):
-                    car_color = 'green'
-                elif most_frequent_pixel[1] == (255, 0, 0):
-                    car_color = 'blue'
-                elif most_frequent_pixel[1] == (255, 255, 0):
-                    car_color = 'yellow'
-                elif most_frequent_pixel[1] == (0, 255, 255):
-                    car_color = 'light blue'
-                elif most_frequent_pixel[1] == (255, 0, 255):
-                    car_color = 'pink'          
+#                elif most_frequent_pixel[1] == (0, 255, 0):
+ #                   car_color = 'green'
+  #              elif most_frequent_pixel[1] == (255, 0, 0):
+   #                 car_color = 'blue'
+    #            elif most_frequent_pixel[1] == (255, 255, 0):
+     #               car_color = 'yellow'
+      #          elif most_frequent_pixel[1] == (0, 255, 255):
+       #             car_color = 'light blue'
+        #        elif most_frequent_pixel[1] == (255, 0, 255):
+         #           car_color = 'pink'          
                 # crop_img.show()
                 # primary_image.show()
                 # plt.imshow([[most_frequent_pixel[1]]])
@@ -317,7 +317,7 @@ class YOLO(object):
             draw.rectangle(
                 [tuple(text_origin), tuple(text_origin + label_size)],
                 fill=self.colors[c])
-            if predicted_class == 'car':
+            if car_color == 'red':
                 draw.text(text_origin, car_color + ' car', fill=(0, 0, 0), font=font)
             else:
                 draw.text(text_origin, label, fill=(0, 0, 0), font=font)
