@@ -29,7 +29,7 @@ const app = Consumer.create({
       path=message.MessageAttributes.path.StringValue;
       sp=path.split('/');
       cameraId=sp[0];
-      yolo(message.MessageAttributes.path.StringValue),((err,data)=>{
+      yolo((message.MessageAttributes.path.StringValue),(err,data)=>{
       if (err){
         Camera.update({_id:cameraId,'chunklist._id':chunkId},
         {'$set':{'chunklist.$.subStatus':'Error'}},(err,cam)=>{

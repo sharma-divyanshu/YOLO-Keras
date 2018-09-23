@@ -55,9 +55,10 @@ let yolo = (filename,callback) => {
             try {
                 objectDetail = JSON.parse(rawData);
             } catch(e) {
-		console.log(e);
+                console.log(e);
             }
         };
+
         let keys = Object.keys(objectDetail).toString();
         let values = objectDetail[keys];
         let all = []
@@ -87,7 +88,7 @@ let yolo = (filename,callback) => {
 };
 
 yolo('/home/ubuntu/YOLO-Keras/colourtag1.avi', function(err, data) {
-	console.log('aoisdfoijsdiofjaoisdc=======', err, data);	
+	console.log('=======', err, data);	
 });
 
 module.exports = {
