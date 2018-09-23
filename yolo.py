@@ -266,6 +266,8 @@ class YOLO(object):
                 
                 if most_frequent_pixel[1] == (0, 0, 255):
                     car_color = 'red'
+                    with open(file_path, "a+") as f:
+                        f.write("{\"red_car\":\"1\"},\n")
 #                elif most_frequent_pixel[1] == (0, 255, 0):
  #                   car_color = 'green'
   #              elif most_frequent_pixel[1] == (255, 0, 0):
@@ -276,13 +278,13 @@ class YOLO(object):
        #             car_color = 'light blue'
         #        elif most_frequent_pixel[1] == (255, 0, 255):
          #           car_color = 'pink'          
-                # crop_img.show()
-                # primary_image.show()
-                # plt.imshow([[most_frequent_pixel[1]]])
-                # plt.show()
-                
-                # print("Most Common", most_frequent_pixel[1])
-
+          #       crop_img.show()
+           #     primary_image.show()
+            #     plt.imshow([[most_frequent_pixel[1]]])
+             #    plt.show()
+              #  
+               #  print("Most Common", most_frequent_pixel[1])
+                #
                 # img = np.asarray(crop_img)
                 # # img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 
@@ -308,7 +310,6 @@ class YOLO(object):
                 text_origin = np.array([left, top - label_size[1]])
             else:
                 text_origin = np.array([left, top + 1])
-
             # My kingdom for a good redistributable image drawing library.
             for i in range(thickness):
                 draw.rectangle(
@@ -383,10 +384,9 @@ def detect_video(yolo, video_path, output_path, file_path):
                 accum_time = accum_time - 1
                 fps = "FPS: " + str(curr_fps)
                 curr_fps = 0
-            cv2.putText(result, text=fps, org=(3, 15), fontFace=cv2.FONT_HERSHEY_SIMPLEX,
-                        fontScale=0.50, color=(255, 0, 0), thickness=2)
-            # cv2.namedWindow("result", cv2.WINDOW_NORMAL)
-            # cv2.imshow("result", result)
+            # cv2.putText(result, text=fps, org=(3, 15), fontFace=cv2.FONT_HERSHEY_SIMPLEX, fontScale=0.50, color=(255, 0, 0), thickness=2)
+            cv2.namedWindow("result", cv2.WINDOW_NORMAL)
+            cv2.imshow("result", result)
             if isOutput:
                 out.write(result)
             if cv2.waitKey(1) & 0xFF == ord('q'):
@@ -399,7 +399,7 @@ def detect_video(yolo, video_path, output_path, file_path):
             count = 1
     with open(file_path, 'rb+') as filehandle:
         filehandle.seek(-2, os.SEEK_END)
-        filehandle.truncate()
+        filehandle.truncate()   
     with open(file_path, "a+") as f:
         f.write(']}')
     yolo.close_session()

@@ -55,7 +55,12 @@ let yolo = (filename,callback) => {
             try {
                 objectDetail = JSON.parse(rawData);
             } catch(e) {
-                console.log(e);
+                console.log("JSON empty.", e);
+                var empty_data={
+                    list:[],
+                    outputPath:pyArgs.output
+                }
+                return callback(null, empty_data)
             }
         };
 
@@ -82,7 +87,7 @@ let yolo = (filename,callback) => {
             list:unique,
             outputPath:pyArgs.output
         }
-	console.log('------------------------------------------',data)
+	    console.log('------------------------------------------',data)
         callback(null,data)
     })
 };
