@@ -1,0 +1,17 @@
+{
+  "name": "node_service",
+  "version": "1.0.0",
+  "description": "",
+  "main": "complete.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "aws-sdk": "^2.320.0",
+    "mongoose": "^5.2.17",
+    "node-ffprobe": "^1.2.2",
+    "sqs-consumer": "^3.8.0"
+  }
+}

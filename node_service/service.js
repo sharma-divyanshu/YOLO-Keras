@@ -1,13 +1,19 @@
 var exec = require('child_process').exec;
 var path = require('path');
 const fs = require('fs');
+var probe = require('node-ffprobe');
 
 var filelocation;
 let unique = []
-var pyPath = '/home/ubuntu/YOLO-Keras/';
+var pyPath = '/home/ubuntu/vigilands/YOLO/';
 
 let yolo = (filename,callback) => {
 
+    console.log("Python service called. Filepath: ", filename);
+    if(!fs.existsSync(filename)) {
+        console.log("File does not exist");
+        callback("File does not exist at the input location",{error: "error"})
+    }
     function flagGen(args) {
         var flags = '';
         for (var a in args) {
@@ -36,6 +42,8 @@ let yolo = (filename,callback) => {
 
     filelocation = pyArgs.file_path;
 
+    // console.log(pyArgs);
+
     var execstr = 'sudo python3 ' + path.join(pyPath, 'yolo_video.py') + flagGen(pyArgs);
     var child = exec(execstr, function(error, stdout, stderr) {
         if (error) {
@@ -48,6 +56,8 @@ let yolo = (filename,callback) => {
     } );
 
     child.stdout.on('end', function() {
+
+    let outputfilename = '/vigilandsrecordings/recordings/processed/p-'+inputfilename+'.ts';
 	console.log("Processing ended");
         let objectDetail;
         let rawData = fs.readFileSync(filelocation.toString());
@@ -58,7 +68,7 @@ let yolo = (filename,callback) => {
                 console.log("JSON empty.", e);
                 var empty_data={
                     list:[],
-                    outputPath:pyArgs.output
+                    outputPath:outputfilename
                 }
                 return callback(null, empty_data)
             }
@@ -78,17 +88,26 @@ let yolo = (filename,callback) => {
                 all.push(Object.keys(values[i]).toString())
             }
         }
+        unique = [];
 
         for(i = 0; i<all.length; i++) {
             if (!unique.includes(all[i])) { unique.push(all[i])}
         }
-        console.log(unique);
-        var data={
-            list:unique,
-            outputPath:pyArgs.output
+
+        if (fs.existsSync(outputfilename)) {
+            probe(outputfilename, function(err, probeData) {
+                var data={
+                    list:unique,
+                    duration: probeData.streams[0].duration,
+                    outputPath:outputfilename
+                }
+                console.log('------------------------------------------',data)
+                callback(null,data)
+            });
         }
-	    console.log('------------------------------------------',data)
-        callback(null,data)
+        else (callback("No file", empty_data));
+
+        // console.log(unique);
     })
 };
 

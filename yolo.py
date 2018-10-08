@@ -15,7 +15,7 @@ from subprocess import call
 
 import cv2
 import matplotlib.pyplot as plt
-from sklearn.cluster import KMeans
+# from sklearn.cluster import KMeans
 from PIL import Image
 
 import numpy as np
@@ -43,6 +43,7 @@ class YOLO(object):
     }
     
     c = 1
+    totaltime = 0
 
     @classmethod
     def get_defaults(cls, n):
@@ -198,6 +199,7 @@ class YOLO(object):
         return new
     
     def detect_image(self, image, file_path):
+        
         start = timer()
 
         if self.model_image_size != (None, None):
@@ -210,7 +212,7 @@ class YOLO(object):
             boxed_image = letterbox_image(image, new_image_size)
         image_data = np.array(boxed_image, dtype='float32')
 
-        print(image_data.shape)
+        # print(image_data.shape)
         image_data /= 255.
         image_data = np.expand_dims(image_data, 0)  # Add batch dimension.
 
@@ -222,7 +224,7 @@ class YOLO(object):
                 K.learning_phase(): 0
             })
                     
-        print('\nFound {} boxes for {}\n'.format(len(out_boxes), 'img'))
+        # print('\nFound {} boxes for {}\n'.format(len(out_boxes), 'img'))
 
         font = ImageFont.truetype(font=dirname+'/font/FiraMono-Medium.otf',
                     size=np.floor(3e-2 * image.size[1] + 0.5).astype('int32'))
@@ -304,7 +306,7 @@ class YOLO(object):
             draw = ImageDraw.Draw(image)
             label_size = draw.textsize(label, font)
 
-            print(label, (left, top), (right, bottom)) # Bounding box out
+            # print(label, (left, top), (right, bottom)) # Bounding box out
 
             if top - label_size[1] >= 0:
                 text_origin = np.array([left, top - label_size[1]])
@@ -325,15 +327,16 @@ class YOLO(object):
             del draw
 
         end = timer()
-        print(end - start)
+        self.totaltime = self.totaltime + (end - start)
+        print(end - start, self.totaltime)
         return image
 
     def close_session(self):
         self.sess.close()
 
 def detect_video(yolo, video_path, output_path, file_path):
-    print(video_path)
-    print(output_path)
+    print("Input path:", video_path)
+    print("Output path:", output_path)
     if video_path == './path2your_video':
         vid = cv2.VideoCapture(0)
     else:
@@ -353,10 +356,10 @@ def detect_video(yolo, video_path, output_path, file_path):
     isOutput = True if output_path != "" else False
     if isOutput:
         print("!!! TYPE:", type(output_path), type(video_FourCC), type(video_fps), type(video_size))
-        out = cv2.VideoWriter(output_path, video_FourCC, video_fps/6, video_size)
+        out = cv2.VideoWriter(output_path, video_FourCC, video_fps/5, video_size)
     accum_time = 0
     curr_fps = 0
-    count = 1
+    count = 0
     fps = "FPS: ??"
     prev_time = timer()
     if os.path.exists(file_path):
@@ -370,7 +373,7 @@ def detect_video(yolo, video_path, output_path, file_path):
         return_value, frame = vid.read()
         if not return_value:
             break
-        if count == 1:
+        if count == 0:
             count += 1
             image = Image.fromarray(frame)
             image = yolo.detect_image(image, file_path)
@@ -391,12 +394,12 @@ def detect_video(yolo, video_path, output_path, file_path):
                 out.write(result)
             if cv2.waitKey(1) & 0xFF == ord('q'):
                 break
-        elif count < 5:
+        elif count < 4:
             image = Image.fromarray(frame)
             count += 1
-        elif count == 5:
+        elif count == 4:
             image = Image.fromarray(frame)
-            count = 1
+            count = 0
     with open(file_path, 'rb+') as filehandle:
         filehandle.seek(-2, os.SEEK_END)
         filehandle.truncate()   

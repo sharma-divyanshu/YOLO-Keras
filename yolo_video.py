@@ -6,7 +6,7 @@ import time
 from subprocess import call
 import os
 
-processed_directory = '/vigilandsrecordings/recordings/P-'
+processed_directory = '/vigilandsrecordings/recordings/processed/p-'
 
 def detect_img(yolo):
     while True:
@@ -89,7 +89,7 @@ if __name__ == '__main__':
         if exists:
             print("File already exists. Deleting.")
             os.remove(processed_directory+str(os.path.splitext(os.path.basename(FLAGS.output))[0])+'.ts')
-        os.system('sudo ffmpeg -i '+str(FLAGS.output)+' -vcodec libx264 '+os.path.dirname(FLAGS.input)+'/P-'+str(os.path.splitext(os.path.basename(FLAGS.output))[0])+'.ts')
+        os.system('sudo ffmpeg -i '+str(FLAGS.output)+' -vcodec libx264 '+processed_directory+str(os.path.splitext(os.path.basename(FLAGS.output))[0])+'.ts')
         print("File Converted")
         os.system('sudo rm -f '+str(FLAGS.output))
         print(FLAGS.output+' deleted')

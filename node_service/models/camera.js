@@ -21,6 +21,9 @@ var chunk=new Schema({
   subStatus:{
     type:String,
     default:"recorded"
+  },
+  duration:{
+    type: Number 
   }
 })
 
